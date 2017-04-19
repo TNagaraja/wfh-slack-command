@@ -1,0 +1,36 @@
+{
+  "name": "wfh-slackbot",
+  "version": "1.0.0",
+  "description": "Tell Slack you're working from home today 🏡",
+  "engine": {
+    "node": "7.6.0"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+	"test": "mocha --debug-brk --inspect --watch"
+  },
+  "main": "index.js",
+  "keywords": [
+    "slackbot"
+  ],
+  "author": "Mark LeMerise <mlemerise@symphono.com>",
+  "license": "MIT",
+  "dependencies": {
+    "bluebird": "^3.5.0",
+    "body-parser": "^1.17.1",
+    "express": "^4.15.2",
+    "google-auth-library": "^0.10.0",
+    "googleapis": "^19.0.0",
+    "isomorphic-fetch": "^2.2.1",
+    "moment": "^2.18.1",
+    "query-string": "^4.3.3"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "chai-as-promised": "^6.0.0",
+    "chance": "^1.0.6",
+    "mocha": "^3.2.0",
+    "rewire": "^2.5.2",
+    "sinon": "^2.1.0"
+  }
+}
