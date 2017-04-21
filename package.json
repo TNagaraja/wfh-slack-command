@@ -2,12 +2,17 @@
   "name": "wfh-slackbot",
   "version": "1.0.0",
   "description": "Tell Slack you're working from home today 🏡",
+  "repository": {
+	  "type": "git",
+	  "url": "https://github.com/Symphono/wfh-slack-command"
+  },
   "engine": {
     "node": "7.6.0"
   },
   "scripts": {
     "start": "node src/index.js",
-	"test": "mocha --debug-brk --inspect --watch"
+    "test-watch": "mocha --debug-brk --inspect --watch",
+	"test": "mocha"
   },
   "main": "index.js",
   "keywords": [
@@ -29,6 +34,7 @@
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
     "chance": "^1.0.6",
+    "eslint": "^3.19.0",
     "mocha": "^3.2.0",
     "rewire": "^2.5.2",
     "sinon": "^2.1.0"

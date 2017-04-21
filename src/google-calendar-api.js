@@ -46,9 +46,9 @@ module.exports = {
 					auth,
 					calendarId: process.env.GOOGLE_CLIENT_EMAIL,
 					eventId
-				}, (err, response) => {
-					if (err) {
-						reject(err);
+				}, error => {
+					if (error) {
+						reject(error);
 					}
 					else {
 						resolve();

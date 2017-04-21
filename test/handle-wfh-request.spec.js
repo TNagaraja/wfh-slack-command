@@ -1,15 +1,11 @@
 var Chance = require('chance');
 var chai = require('chai');
-var mocha = require('mocha');
 var rewire = require('rewire');
 var sinon = require('sinon');
-var Promise = require('bluebird');
-var moment = require('moment');
 
 chai.use(require('chai-as-promised'));
 
 var chance = new Chance();
-var expect = chai.expect;
 var handleWfhRequest = rewire('../src/handle-wfh-request');
 
 describe('Handling a WFH request', () => {

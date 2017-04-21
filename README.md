@@ -20,6 +20,10 @@ $ npm install
 1. Replace the values in `.vscode/launch.json` with your API keys and emails
 1. Execute the "Launch Program" task through the debug panel in VS Code (easy) _or_ `export` these environmental variables (including `PORT`) and execute `npm start` in your favorite terminal
 
+### Testing
+* Run tests with `npm test`
+* Use `npm run test-watch` to debug and run tests during development
+
 
 ## License
 

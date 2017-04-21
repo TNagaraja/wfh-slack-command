@@ -1,10 +1,9 @@
 var Chance = require('chance');
+var Promise = require('bluebird');
 var chai = require('chai');
-var mocha = require('mocha');
+var moment = require('moment');
 var rewire = require('rewire');
 var sinon = require('sinon');
-var Promise = require('bluebird');
-var moment = require('moment');
 
 chai.use(require('chai-as-promised'));
 
@@ -77,11 +76,10 @@ describe('Google Calendar API', () => {
 	});
 
 	describe('Deleting a WFH event', () => {
-		var error, apiResponse, eventId, resolvedResult;
-		var act = () => resolvedResult = googleApiWrapper.deleteWfhEvent(eventId);
+		var error, eventId;
+		var act = () => googleApiWrapper.deleteWfhEvent(eventId);
 
 		beforeEach(() => {
-			apiResponse = {};
 			eventId = chance.string();
 		});
 
@@ -113,7 +111,7 @@ describe('Google Calendar API', () => {
 	});
 
 	describe('Creating a WFH event', () => {
-		var resolvedResult;
+		var employeeName, resolvedResult;
 		var act = () => resolvedResult = googleApiWrapper.createWfhEvent(employeeName);
 
 		beforeEach(() => {
@@ -154,6 +152,8 @@ describe('Google Calendar API', () => {
 		});
 
 		describe('And the event doesn\'t exist or the API errors out', () => {
+			var error;
+
 			beforeEach(() => {
 				error = {};
 				fakeCalendarApi.insert = sinon.stub().callsArgWith(1, error);
