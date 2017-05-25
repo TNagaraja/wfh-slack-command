@@ -2,13 +2,7 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"env": {
-				"GOOGLE_TARGET_CALENDAR": "your_wfh_calendar@resource.calendar.google.com",
-				"GOOGLE_PRIVATE_KEY": "-----BEGIN PRIVATE KEY-----\nyourkey\n-----END PRIVATE KEY-----\n",
-  				"GOOGLE_CLIENT_EMAIL": "your-service-account@your-service-account.iam.gserviceaccount.com",
-				"PORT": "2323",
-				"SLACK_API_TOKEN": "your-slack-api-token",
-			},
+			"envFile": "${workspaceRoot}/.env",
 			"type": "node",
 			"request": "launch",
 			"name": "Launch Program",

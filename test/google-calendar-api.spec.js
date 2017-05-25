@@ -13,23 +13,24 @@ var googleApiWrapper = rewire('../src/google-calendar-api');
 var fakeCalendarApi = {};
 
 googleApiWrapper.__set__({
-	credentials: Promise.resolve({}),
+	credentials: sinon.stub().returns(Promise.resolve({})),
 	calendar: fakeCalendarApi
 });
 
 describe('Google Calendar API', () => {
-	var clientEmail, targetCalendar;
+	var clientEmail, targetCalendar, date;
 
 	before(() => {
 		clientEmail = chance.email();
 		targetCalendar = chance.email();
 		process.env.GOOGLE_CLIENT_EMAIL = clientEmail;
 		process.env.GOOGLE_TARGET_CALENDAR = targetCalendar;
+		date = new Date(chance.date({ year: 2017 }));
 	});
 
 	describe('Checking if an existing WFH event exists', () => {
 		var apiResponse, employeeName, resolvedResult;
-		var act = () => resolvedResult = googleApiWrapper.checkIfWfhEventExists(employeeName);
+		var act = () => resolvedResult = googleApiWrapper.checkIfWfhEventExists(employeeName, date);
 
 		beforeEach(() => {
 			apiResponse = {};
@@ -50,12 +51,12 @@ describe('Google Calendar API', () => {
 				expect(fakeCalendarApi.list.firstCall.args[0].calendarId).to.equal(clientEmail)
 			);
 
-			it('should set the "timeMin" to today', () =>
-				expect(moment(fakeCalendarApi.list.firstCall.args[0].timeMin).isSame(moment(), 'day')).to.equal(true)
+			it('should set the "timeMin" to event date', () =>
+				expect(moment(fakeCalendarApi.list.firstCall.args[0].timeMin).isSame(moment(date), 'day')).to.equal(true)
 			);
 
-			it('should set the "timeMax" parameter to tomorrow', () =>
-				expect(moment(fakeCalendarApi.list.firstCall.args[0].timeMax).isSame(moment().add(1, 'day'), 'day')).to.equal(true)
+			it('should set the "timeMax" parameter to day after event date', () =>
+				expect(moment(fakeCalendarApi.list.firstCall.args[0].timeMax).isSame(moment(date).add(1, 'day'), 'day')).to.equal(true)
 			);
 
 			it('should find that event ID', () =>
@@ -112,7 +113,7 @@ describe('Google Calendar API', () => {
 
 	describe('Creating a WFH event', () => {
 		var employeeName, resolvedResult;
-		var act = () => resolvedResult = googleApiWrapper.createWfhEvent(employeeName);
+		var act = () => resolvedResult = googleApiWrapper.createWfhEvent(employeeName, date);
 
 		beforeEach(() => {
 			employeeName = chance.name();
@@ -138,12 +139,12 @@ describe('Google Calendar API', () => {
 				expect(resolvedResult).to.eventually.be.fulfilled
 			)
 
-			it('should set the start time to today', () =>
-				expect(moment(fakeCalendarApi.insert.firstCall.args[0].resource.start.date).isSame(moment(), 'day')).to.equal(true)
+			it('should set the start time to start of event date day', () =>
+				expect(moment(fakeCalendarApi.insert.firstCall.args[0].resource.start.dateTime).isSame(moment(date), 'day')).to.equal(true)
 			);
 
-			it('should set the end time to tomorrow', () =>
-				expect(moment(fakeCalendarApi.insert.firstCall.args[0].resource.end.date).isSame(moment().add(1, 'day'), 'day')).to.equal(true)
+			it('should set the end time to start of day after event date', () =>
+				expect(moment(fakeCalendarApi.insert.firstCall.args[0].resource.end.dateTime).isSame(moment(date).add(1, 'day'), 'day')).to.equal(true)
 			);
 
 			it('should set the summary to the employee\'s name plus "WFH"', () =>
