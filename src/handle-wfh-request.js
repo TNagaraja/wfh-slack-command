@@ -1,21 +1,22 @@
 var googleApi = require('./google-calendar-api');
 var slackApi = require('./slack-api');
+var moment = require('moment');
 
 var toggleWfhEvent = (eventId, employeeName, date) => {
 	var action, message;
 
 	if (eventId) {
 		action = googleApi.deleteWfhEvent(eventId);
-		message = '🚗 Okay! Looks like you\'re going to the office today. 🏢';
+		message = `🚗 Okay! Looks like you're going to the office on ${ moment(date).format('MMMM Do YYYY') }. 🏢`;
 	} else {
 		action = googleApi.createWfhEvent(employeeName, date);
-		message = '✅ Okay! You\'re on the calendar as WFH today. _Don\'t slack off_! 🏡';
+		message = `✅ Okay! You're on the calendar as WFH for ${ moment(date).format('MMMM Do YYYY') }. _Don't slack off_! 🏡`;
 	}
 
 	return action.then(() => message);
 };
 
-var clearCalendarEvent = eventId => {
+var clearCalendarEvent = (eventId, date) => {
 	var action, message;
 
 	if (eventId) {
@@ -24,7 +25,7 @@ var clearCalendarEvent = eventId => {
 	else {
 		action = Promise.resolve();
 	}
-	message = '🚗 Okay! Looks like you\'re going to the office today. 🏢';
+	message = `🚗 Okay! Looks like you're going to the office ${ moment(date).format('MMMM Do YYYY') }. 🏢`;
 
 	return action.then(() => message);
 }
@@ -48,7 +49,7 @@ module.exports = {
 			.getUserInfo(userID)
 			.then(employeeName =>
 				googleApi.checkIfWfhEventExists(employeeName, date)
-					.then(eventId => clearCalendarEvent(eventId))
+					.then(eventId => clearCalendarEvent(eventId, date))
 					.then(message => slackApi.sendResponse(slackResponseEndpoint, message))
 			);
 	}
