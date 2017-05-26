@@ -12,6 +12,10 @@ app.post('/wfh', (req, res) => {
 	{
 		handleWfhRequest.clear(req.body.user_id, req.body.response_url, parseText.getDate(req.body.text));
 	}
+	else if (parseText.checkIfDateTimeInterval(req.body.text))
+	{
+			handleWfhRequest.handleRequestInInterval(req.body.user_id, req.body.response_url, parseText.getStartDateTime(req.body.text), parseText.getEndDateTime(req.body.text));
+	}
 	else
 	{
 		handleWfhRequest.handleRequest(req.body.user_id, req.body.response_url, parseText.getDate(req.body.text));

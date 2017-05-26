@@ -49,6 +49,29 @@ module.exports = {
 			)
 		);
 	},
+	checkIfWfhEventExistsInInterval: (employeeName, eventStartDateTime, eventEndDateTime) => {
+		return new Promise(resolve =>
+			credentials().then(auth =>
+				calendar.list({
+					auth,
+					calendarId: process.env.GOOGLE_CLIENT_EMAIL,
+					singleEvents: true,
+					timeMin: moment(eventStartDateTime).format(),
+					timeMax: moment(eventEndDateTime).format()
+				}, (err, response) => {
+					var existingId;
+
+					if (response) {
+						existingId = response.items
+							.filter(i => i.summary === `${ employeeName } - WFH`)
+							.map(i => i.id)[0];
+					}
+
+					resolve(existingId);
+				})
+			)
+		);
+	},
 	deleteWfhEvent: eventId => {
 		return new Promise((resolve, reject) =>
 			credentials().then(auth =>
@@ -62,6 +85,30 @@ module.exports = {
 					}
 					else {
 						resolve();
+					}
+				})
+			)
+		);
+	},
+	createWfhEventInInterval: (employeeName, eventStartDateTime, eventEndDateTime) => {
+		return new Promise((resolve, reject) =>
+			credentials().then(auth =>
+				calendar.insert({
+					auth,
+					calendarId: 'primary',
+					resource: {
+						attendees: [{ email: process.env.GOOGLE_TARGET_CALENDAR }],
+						description: 'Added by your friendly, neighborhood Slackbot 🏡',
+						end: { dateTime: moment(eventEndDateTime).format() },
+						start: { dateTime: moment(eventStartDateTime).format() },
+						summary: `${ employeeName } - WFH`
+					}
+				}, (err, response) => {
+					if (err) {
+						reject(err);
+					}
+					else {
+						resolve(response);
 					}
 				})
 			)
