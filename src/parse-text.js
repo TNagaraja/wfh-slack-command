@@ -57,19 +57,22 @@ function checkIfTomorrow(text)
 
 function extractDateTime(text, start, end)
 {
+		var hoursStart = start;
 		var dateTime = new Date();
-		if (Date.parse(text.substring(start, end)))
+		if (moment(text, 'MM-DD-YYYY').day())
 		{
-			dateTime = new Date(Date.parse(text.substring(start, end)));
-		}
-		else
-		{
-			if (checkIfTomorrow(text))
+			dateTime = new Date(moment(text, 'MM-DD-YYYY').format());
+			if (hoursStart === 0)
 			{
-				dateTime.setDate(dateTime.getDate() + 1);
+				hoursStart = text.search(' ');
 			}
-			dateTime = new Date(`${ moment(dateTime).format().substr(0, 11) }${ extractHoursMinutesFromString(text, start, end) }:00${ moment(dateTime).format().substr(19, 6) }`);
 		}
+		else if (checkIfTomorrow(text))
+		{
+			dateTime.setDate(dateTime.getDate() + 1);
+		}
+		dateTime = new Date(`${ moment(dateTime).format().substr(0, 11) }${ extractHoursMinutesFromString(text, hoursStart, end) }:00${ moment(dateTime).format().substr(19, 6) }`);
+
 		return dateTime;
 }
 
@@ -80,6 +83,10 @@ module.exports = {
 		if (checkIfTomorrow(text))
 		{
 			date.setDate(date.getDate() + 1);
+		}
+		else if (moment(text, 'MM-DD-YYYY').day())
+		{
+			date = new Date(moment(text, 'MM-DD-YYYY').format());
 		}
 		return date;
 	},

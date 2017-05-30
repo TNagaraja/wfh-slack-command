@@ -10,7 +10,7 @@ var parseText = rewire('../src/parse-text');
 describe('Parsing Text', () => {
 	var input, date;
 	describe('When processing a request to get the date', () => {
-		describe('And the supplied text contains a time interval', () => {
+		describe('And the supplied text contains a time interval \'HH:MM am/pm to HH:MM am/pm\'', () => {
 			var startDateTime, endDateTime, startHour, endHour;
 			beforeEach(() => {
 				startHour = chance.hour();
@@ -33,7 +33,14 @@ describe('Parsing Text', () => {
 					{
 						startDateTime = new Date(`${ moment(date).format('MMMM') } ${ moment(date).format('D') }, ${ moment(date).format('YYYY') } ${ startHour }:00:00`);
 					}
-					endDateTime = new Date(`${ moment(date).format('MMMM') } ${ moment(date).format('D') }, ${ moment(date).format('YYYY') } ${ endHour + 12 }:00:00`);
+					if (endHour === 12)
+					{
+						endDateTime = new Date(`${ moment(date).format('MMMM') } ${ moment(date).format('D') }, ${ moment(date).format('YYYY') } ${ endHour }:00:00`);
+					}
+					else
+					{
+						endDateTime = new Date(`${ moment(date).format('MMMM') } ${ moment(date).format('D') }, ${ moment(date).format('YYYY') } ${ endHour + 12 }:00:00`);
+					}
 				});
 				it('should return the start date time', () => {
 					sinon.assert.match(parseText.getStartDateTime(input), startDateTime);
@@ -42,7 +49,37 @@ describe('Parsing Text', () => {
 					sinon.assert.match(parseText.getEndDateTime(input), endDateTime);
 				});
 			});
-			describe('And the supplied text contains only specified times and no dates (assume today)', () => {
+			describe('And the user enters a date \'MM-DD-YYYY\' before the time interval', () => {
+				var dateString;
+				beforeEach(() => {
+					dateString = chance.date({ string: true });
+					date = new Date(moment(dateString, 'MM-DD-YYYY').format());
+					input = `${ dateString } ${ input }`;
+					if (startHour < 10)
+					{
+						startDateTime = new Date(`${ moment(date).format('MMMM') } ${ moment(date).format('D') }, ${ moment(date).format('YYYY') } 0${ startHour }:00:00`);
+					}
+					else
+					{
+						startDateTime = new Date(`${ moment(date).format('MMMM') } ${ moment(date).format('D') }, ${ moment(date).format('YYYY') } ${ startHour }:00:00`);
+					}
+					if (endHour === 12)
+					{
+						endDateTime = new Date(`${ moment(date).format('MMMM') } ${ moment(date).format('D') }, ${ moment(date).format('YYYY') } ${ endHour }:00:00`);
+					}
+					else
+					{
+						endDateTime = new Date(`${ moment(date).format('MMMM') } ${ moment(date).format('D') }, ${ moment(date).format('YYYY') } ${ endHour + 12 }:00:00`);
+					}
+				});
+				it('should return the start date time', () => {
+					sinon.assert.match(parseText.getStartDateTime(input), startDateTime);
+				});
+				it('should return the end date time', () => {
+					sinon.assert.match(parseText.getEndDateTime(input), endDateTime);
+				});
+		});
+			describe('And the user does not enter a date (assume current date))', () => {
 				beforeEach(() => {
 					date = new Date();
 					if (startHour < 10)
@@ -53,7 +90,14 @@ describe('Parsing Text', () => {
 					{
 						startDateTime = new Date(`${ moment(date).format('MMMM') } ${ moment(date).format('D') }, ${ moment(date).format('YYYY') } ${ startHour }:00:00`);
 					}
-					endDateTime = new Date(`${ moment(date).format('MMMM') } ${ moment(date).format('D') }, ${ moment(date).format('YYYY') } ${ endHour + 12 }:00:00`);
+					if (endHour === 12)
+					{
+						endDateTime = new Date(`${ moment(date).format('MMMM') } ${ moment(date).format('D') }, ${ moment(date).format('YYYY') } ${ endHour }:00:00`);
+					}
+					else
+					{
+						endDateTime = new Date(`${ moment(date).format('MMMM') } ${ moment(date).format('D') }, ${ moment(date).format('YYYY') } ${ endHour + 12 }:00:00`);
+					}
 				});
 				it('should return the start date time', () => {
 					sinon.assert.match(parseText.getStartDateTime(input), startDateTime);
@@ -80,7 +124,16 @@ describe('Parsing Text', () => {
 					sinon.assert.match(act().getDate(), date.getDate());
 				});
 			});
-			describe('And the supplied text is something else', () => {
+			describe('And the supplied text contains a date', () => {
+				beforeEach(() => {
+					input = chance.date({ string: true });
+					date = new Date(moment(input, 'MM-DD-YYYY').format());
+				});
+				it('should return the entered date', () => {
+					sinon.assert.match(act().getDate(), date.getDate());
+				});
+			});
+			describe('And the supplied text does not contain a date', () => {
 				beforeEach(() => {
 					input = chance.sentence();
 					date = new Date();

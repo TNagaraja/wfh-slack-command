@@ -142,7 +142,7 @@ describe('Handling a WFH request', () => {
 
 				beforeEach(() => {
 					existingWfhEventId = chance.string();
-					fakeGoogleApi.checkIfWfhEventExists.resolves(existingWfhEventId);
+					fakeGoogleApi.checkIfWfhEventExistsInInterval.resolves(existingWfhEventId);
 				});
 
 				describe('And the Google API calender deletion request is issued correctly', () => {
@@ -174,8 +174,8 @@ describe('Handling a WFH request', () => {
 
 			describe('And the user didn\'t already submit a /wfh request for requested date', () => {
 				beforeEach(() => {
-					fakeGoogleApi.checkIfWfhEventExists.resolves();
-					fakeGoogleApi.createWfhEvent.resolves();
+					fakeGoogleApi.checkIfWfhEventExistsInInterval.resolves();
+					fakeGoogleApi.createWfhEventInInterval.resolves();
 					return act();
 				});
 
@@ -203,7 +203,7 @@ describe('Handling a WFH request', () => {
 		describe('And there is an issue connecting with the Google API', () => {
 			beforeEach(() => {
 				fakeSlackApi.getUserInfo.resolves(chance.name());
-				fakeGoogleApi.checkIfWfhEventExists.rejects();
+				fakeGoogleApi.checkIfWfhEventExistsInInterval.rejects();
 				return act();
 			});
 

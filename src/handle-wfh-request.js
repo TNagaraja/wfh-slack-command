@@ -76,7 +76,7 @@ module.exports = {
 		return slackApi
 			.getUserInfo(userID)
 			.then(employeeName =>
-				googleApi.checkIfWfhEventExists(employeeName, startDateTime)
+				googleApi.checkIfWfhEventExistsInInterval(employeeName, startDateTime, endDateTime)
 					.then(eventId => toggleWfhEventInInterval(eventId, employeeName, startDateTime, endDateTime))
 					.then(message => slackApi.sendResponse(slackResponseEndpoint, message))
 			)
