@@ -1,43 +1,30 @@
 var moment = require('moment');
 
-function adjustHours (text, start, end, hours)
+function handleAMPM(text)
 {
-	var fixedHours = hours;
-	if (text.substring(start, end).includes('PM') || text.substring(start, end).includes('pm'))
-	{
-		if (hours < 12)
-		{
-			fixedHours += 12;
-		}
-	}
-	if (text.substring(start, end).includes('AM') || text.substring(start, end).includes('am'))
+	var hours = parseInt(text.substring(0, text.search(':')), 10);
+	if ((/(AM|am)/).test(text))
 	{
 		if (hours === 12)
 		{
-			fixedHours = 0;
+			hours = 0;
 		}
 	}
-	return fixedHours;
+	else if ((/(PM|pm)/).test(text))
+	{
+		if (hours < 12)
+		{
+			hours += 12;
+		}
+	}
+	return hours;
 }
 
 function extractHoursMinutesFromString(text, searchStartIndex, searchEndIndex)
 {
-	var reachedStartOfTime = false;
-	var startOfTimeIndex, timeString, hours;
-	for (var i = searchStartIndex; i < searchEndIndex; i += 1)
-	{
-		if (!reachedStartOfTime && !isNaN(text.charAt(i)))
-		{
-			reachedStartOfTime = true;
-			startOfTimeIndex = i;
-		}
-		else if (reachedStartOfTime && text.charAt(i) === ':')
-		{
-			hours = adjustHours(text, searchStartIndex, searchEndIndex, parseInt(text.substring(startOfTimeIndex, i), 10));
-			timeString = `${ hours }${ text.substr(i, 3) }`
-			break;
-		}
-	}
+	var timeArray = (/(\w+:\w\w\s?(AM|am|PM|pm))/).exec(text.substring(searchStartIndex, searchEndIndex));
+	var timeString = `${ handleAMPM(timeArray[0]) }${ timeArray[0].substr(timeArray[0].search(':'), 3) }`;
+
 	if (timeString.length === 4)
 	{
 		timeString = `0${ timeString }`;
@@ -79,7 +66,7 @@ function extractDateTime(text, start, end)
 module.exports = {
 	getDate: function (text)
 	{
-		var date = new Date();
+		var date = new Date(moment().startOf('day'));
 		if (checkIfTomorrow(text))
 		{
 			date.setDate(date.getDate() + 1);

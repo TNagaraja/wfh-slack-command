@@ -26,30 +26,7 @@ var credentials = (function() {
 })();
 
 module.exports = {
-	checkIfWfhEventExists: (employeeName, eventDate) => {
-		return new Promise(resolve =>
-			credentials().then(auth =>
-				calendar.list({
-					auth,
-					calendarId: process.env.GOOGLE_CLIENT_EMAIL,
-					singleEvents: true,
-					timeMin: moment(eventDate).startOf('day').format(),
-					timeMax: moment(eventDate).add(1, 'day').startOf('day').format()
-				}, (err, response) => {
-					var existingId;
-
-					if (response) {
-						existingId = response.items
-							.filter(i => i.summary === `${ employeeName } - WFH`)
-							.map(i => i.id)[0];
-					}
-
-					resolve(existingId);
-				})
-			)
-		);
-	},
-	checkIfWfhEventExistsInInterval: (employeeName, eventStartDateTime, eventEndDateTime) => {
+	checkIfWfhEventExists: (employeeName, eventStartDateTime, eventEndDateTime = new Date(moment(eventStartDateTime).add(1, 'day').startOf('day').format())) => {
 		return new Promise(resolve =>
 			credentials().then(auth =>
 				calendar.list({
@@ -90,7 +67,7 @@ module.exports = {
 			)
 		);
 	},
-	createWfhEventInInterval: (employeeName, eventStartDateTime, eventEndDateTime) => {
+	createWfhEvent: (employeeName, eventStartDateTime, eventEndDateTime = new Date(moment(eventStartDateTime).add(1, 'day').startOf('day').format())) => {
 		return new Promise((resolve, reject) =>
 			credentials().then(auth =>
 				calendar.insert({
@@ -100,31 +77,7 @@ module.exports = {
 						attendees: [{ email: process.env.GOOGLE_TARGET_CALENDAR }],
 						description: 'Added by your friendly, neighborhood Slackbot 🏡',
 						end: { dateTime: moment(eventEndDateTime).format() },
-						start: { dateTime: moment(eventStartDateTime).format() },
-						summary: `${ employeeName } - WFH`
-					}
-				}, (err, response) => {
-					if (err) {
-						reject(err);
-					}
-					else {
-						resolve(response);
-					}
-				})
-			)
-		);
-	},
-	createWfhEvent: (employeeName, eventDate) => {
-		return new Promise((resolve, reject) =>
-			credentials().then(auth =>
-				calendar.insert({
-					auth,
-					calendarId: 'primary',
-					resource: {
-						attendees: [{ email: process.env.GOOGLE_TARGET_CALENDAR }],
-						description: 'Added by your friendly, neighborhood Slackbot 🏡',
-						end: { dateTime: moment(eventDate).add(1, 'day').startOf('day').format() },
-						start: { dateTime: moment(eventDate).startOf('day').format() },
+						start: { dateTime: moment(eventStartDateTime) },
 						summary: `${ employeeName } - WFH`
 					}
 				}, (err, response) => {

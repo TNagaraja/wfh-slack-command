@@ -78,7 +78,7 @@ describe('Parsing Text', () => {
 				it('should return the end date time', () => {
 					sinon.assert.match(parseText.getEndDateTime(input), endDateTime);
 				});
-		});
+			});
 			describe('And the user does not enter a date (assume current date))', () => {
 				beforeEach(() => {
 					date = new Date();

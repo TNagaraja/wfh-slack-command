@@ -28,64 +28,64 @@ describe('Google Calendar API', () => {
 		date = new Date(chance.date({ year: 2017 }));
 	});
 
-	describe('Checking if an existing WFH event exists (not in time interval)', () => {
-		var apiResponse, employeeName, resolvedResult;
-		var act = () => resolvedResult = googleApiWrapper.checkIfWfhEventExists(employeeName, date);
-
-		beforeEach(() => {
-			apiResponse = {};
-			employeeName = chance.name();
-			fakeCalendarApi.list = sinon.stub().callsArgWith(1, null, apiResponse);
-		});
-
-		describe('And there is already an event with a summary matching the event template like "Person - WFH"', () => {
-			var eventId;
+	describe('Checking if an existing WFH event exists', () => {
+		describe('And we want to see if a WFH event exists on a specified date', () => {
+			var apiResponse, employeeName, resolvedResult;
+			var act = () => resolvedResult = googleApiWrapper.checkIfWfhEventExists(employeeName, date);
 
 			beforeEach(() => {
-				eventId = chance.string();
-				apiResponse.items = [{ id: eventId, summary: `${ employeeName } - WFH` }];
-				return act();
+				apiResponse = {};
+				employeeName = chance.name();
+				fakeCalendarApi.list = sinon.stub().callsArgWith(1, null, apiResponse);
 			});
 
-			it('should pass in the GOOGLE_CLIENT_EMAIL environmental variable as the "calenderId"', () =>
-				expect(fakeCalendarApi.list.firstCall.args[0].calendarId).to.equal(clientEmail)
-			);
+			describe('And there is already an event with a summary matching the event template like "Person - WFH"', () => {
+				var eventId;
 
-			it('should set the "timeMin" to event date', () =>
-				expect(moment(fakeCalendarApi.list.firstCall.args[0].timeMin).isSame(moment(date), 'day')).to.equal(true)
-			);
+				beforeEach(() => {
+					eventId = chance.string();
+					apiResponse.items = [{ id: eventId, summary: `${ employeeName } - WFH` }];
+					return act();
+				});
 
-			it('should set the "timeMax" parameter to day after event date', () =>
-				expect(moment(fakeCalendarApi.list.firstCall.args[0].timeMax).isSame(moment(date).add(1, 'day'), 'day')).to.equal(true)
-			);
+				it('should pass in the GOOGLE_CLIENT_EMAIL environmental variable as the "calendarId"', () =>
+					expect(fakeCalendarApi.list.firstCall.args[0].calendarId).to.equal(clientEmail)
+				);
 
-			it('should find that event ID', () =>
-				expect(resolvedResult).to.eventually.equal(eventId)
-			);
+				it('should set the "timeMin" to event date', () =>
+					expect(moment(fakeCalendarApi.list.firstCall.args[0].timeMin).isSame(moment(date), 'day')).to.equal(true)
+				);
+
+				it('should set the "timeMax" parameter to day after event date', () =>
+					expect(moment(fakeCalendarApi.list.firstCall.args[0].timeMax).isSame(moment(date).add(1, 'day'), 'day')).to.equal(true)
+				);
+
+				it('should find that event ID', () =>
+					expect(resolvedResult).to.eventually.equal(eventId)
+				);
+			});
+
+			describe('And there is not already a WFH event', () => {
+				beforeEach(() => {
+					apiResponse.items = [{ id: chance.string(), summary: `${ chance.name({ middle: true }) } - WFH` }];
+					return act();
+				});
+
+				it('should not find that event', () => {
+					expect(resolvedResult).to.eventually.not.be.ok
+				});
+			});
 		});
+		describe('And we want to see if a WFH event exists in a time interval', () => {
+			var apiResponse, employeeName, resolvedResult, startDateTime, endDateTime;
+			var act = () => resolvedResult = googleApiWrapper.checkIfWfhEventExists(employeeName, startDateTime, endDateTime);
 
-		describe('And there is not already a WFH event', () => {
 			beforeEach(() => {
-				apiResponse.items = [{ id: chance.string(), summary: `${ chance.name({ middle: true }) } - WFH` }];
-				return act();
+				apiResponse = {};
+				employeeName = chance.name();
+				fakeCalendarApi.list = sinon.stub().callsArgWith(1, null, apiResponse);
 			});
-
-			it('should not find that event', () => {
-				expect(resolvedResult).to.eventually.not.be.ok
-			});
-		});
-	});
-	describe('Checking if an existing WFH event exists in time interval', () => {
-		var apiResponse, employeeName, resolvedResult, startDateTime, endDateTime;
-		var act = () => resolvedResult = googleApiWrapper.checkIfWfhEventExistsInInterval(employeeName, startDateTime, endDateTime);
-
-		beforeEach(() => {
-			apiResponse = {};
-			employeeName = chance.name();
-			fakeCalendarApi.list = sinon.stub().callsArgWith(1, null, apiResponse);
-		});
-
-		describe('And there is already an event with a summary matching the event template like "Person - WFH"', () => {
+			describe('And there is already an event with a summary matching the event template like "Person - WFH"', () => {
 			var eventId;
 
 			beforeEach(() => {
@@ -96,15 +96,15 @@ describe('Google Calendar API', () => {
 				return act();
 			});
 
-			it('should pass in the GOOGLE_CLIENT_EMAIL environmental variable as the "calenderId"', () =>
+			it('should pass in the GOOGLE_CLIENT_EMAIL environmental variable as the "calendarId"', () =>
 				expect(fakeCalendarApi.list.firstCall.args[0].calendarId).to.equal(clientEmail)
 			);
 
-			it('should set the "timeMin" to event date', () =>
+			it('should set the "timeMin" to the start time', () =>
 				sinon.assert.match(moment(fakeCalendarApi.list.firstCall.args[0].timeMin).format(), moment(startDateTime).format())
 			);
 
-			it('should set the "timeMax" parameter to day after event date', () =>
+			it('should set the "timeMax" parameter to the end time', () =>
 				sinon.assert.match(moment(fakeCalendarApi.list.firstCall.args[0].timeMax).format(), moment(endDateTime).format())
 			);
 
@@ -113,19 +113,21 @@ describe('Google Calendar API', () => {
 			);
 		});
 
-		describe('And there is not already a WFH event', () => {
-			beforeEach(() => {
-				apiResponse.items = [{ id: chance.string(), summary: `${ chance.name({ middle: true }) } - WFH` }];
-				startDateTime = new Date(chance.date({ year: 2017 }));
-				endDateTime = new Date(chance.date({ year: 2017 }));
-				return act();
-			});
+			describe('And there is not already a WFH event', () => {
+				beforeEach(() => {
+					apiResponse.items = [{ id: chance.string(), summary: `${ chance.name({ middle: true }) } - WFH` }];
+					startDateTime = new Date(chance.date({ year: 2017 }));
+					endDateTime = new Date(chance.date({ year: 2017 }));
+					return act();
+				});
 
-			it('should not find that event', () => {
-				expect(resolvedResult).to.eventually.not.be.ok
+				it('should not find that event', () => {
+					expect(resolvedResult).to.eventually.not.be.ok
+				});
 			});
 		});
 	});
+
 	describe('Deleting a WFH event', () => {
 		var error, eventId;
 		var act = () => googleApiWrapper.deleteWfhEvent(eventId);
@@ -140,7 +142,7 @@ describe('Google Calendar API', () => {
 				return act();
 			});
 
-			it('should pass in the GOOGLE_CLIENT_EMAIL environmental variable as the "calenderId"', () =>
+			it('should pass in the GOOGLE_CLIENT_EMAIL environmental variable as the "calendarId"', () =>
 				expect(fakeCalendarApi.list.firstCall.args[0].calendarId).to.equal(clientEmail)
 			);
 
@@ -217,7 +219,7 @@ describe('Google Calendar API', () => {
 		});
 		describe('And there is a time interval ', () => {
 			var startDateTime, endDateTime;
-			var act = () => resolvedResult = googleApiWrapper.createWfhEventInInterval(employeeName, startDateTime, endDateTime);
+			var act = () => resolvedResult = googleApiWrapper.createWfhEvent(employeeName, startDateTime, endDateTime);
 			describe('And the event creation succeeds', () => {
 				beforeEach(() => {
 					fakeCalendarApi.insert = sinon.stub().callsArg(1, null, {});
@@ -240,11 +242,11 @@ describe('Google Calendar API', () => {
 					expect(resolvedResult).to.eventually.be.fulfilled
 				)
 
-				it('should set the start time to start of event date day', () =>
+				it('should set the start time to the specified start time', () =>
 						sinon.assert.match(moment(fakeCalendarApi.insert.firstCall.args[0].resource.start.dateTime).format(), moment(startDateTime).format())
 				);
 
-				it('should set the end time to start of day after event date', () =>
+				it('should set the end time to the specified end time', () =>
 						sinon.assert.match(moment(fakeCalendarApi.insert.firstCall.args[0].resource.end.dateTime).format(), moment(endDateTime).format())
 				);
 

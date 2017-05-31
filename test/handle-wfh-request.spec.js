@@ -18,9 +18,7 @@ describe('Handling a WFH request', () => {
 
 		fakeGoogleApi = {
 			createWfhEvent: sinon.stub(),
-			createWfhEventInInterval: sinon.stub(),
 			checkIfWfhEventExists: sinon.stub(),
-			checkIfWfhEventExistsInInterval: sinon.stub(),
 			deleteWfhEvent: sinon.stub()
 		};
 
@@ -142,7 +140,7 @@ describe('Handling a WFH request', () => {
 
 				beforeEach(() => {
 					existingWfhEventId = chance.string();
-					fakeGoogleApi.checkIfWfhEventExistsInInterval.resolves(existingWfhEventId);
+					fakeGoogleApi.checkIfWfhEventExists.resolves(existingWfhEventId);
 				});
 
 				describe('And the Google API calender deletion request is issued correctly', () => {
@@ -174,13 +172,13 @@ describe('Handling a WFH request', () => {
 
 			describe('And the user didn\'t already submit a /wfh request for requested date', () => {
 				beforeEach(() => {
-					fakeGoogleApi.checkIfWfhEventExistsInInterval.resolves();
-					fakeGoogleApi.createWfhEventInInterval.resolves();
+					fakeGoogleApi.checkIfWfhEventExists.resolves();
+					fakeGoogleApi.createWfhEvent.resolves();
 					return act();
 				});
 
 				it('should call the Google API to create the WFH event', () =>
-					sinon.assert.calledWith(fakeGoogleApi.createWfhEventInInterval, employeeName, startDateTime, endDateTime)
+					sinon.assert.calledWith(fakeGoogleApi.createWfhEvent, employeeName, startDateTime, endDateTime)
 				);
 
 				it('should send a response back to Slack telling the user the WFH event was created', () =>
@@ -203,7 +201,7 @@ describe('Handling a WFH request', () => {
 		describe('And there is an issue connecting with the Google API', () => {
 			beforeEach(() => {
 				fakeSlackApi.getUserInfo.resolves(chance.name());
-				fakeGoogleApi.checkIfWfhEventExistsInInterval.rejects();
+				fakeGoogleApi.checkIfWfhEventExists.rejects();
 				return act();
 			});
 

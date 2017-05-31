@@ -30,7 +30,7 @@ var toggleWfhEventInInterval = (eventId, employeeName, startDateTime, endDateTim
 			message = `🚗 Okay! Looks like you're going to the office from ${ moment(startDateTime).format('MMMM Do YYYY, h:mm a') } to ${ moment(endDateTime).format('MMMM Do YYYY, h:mm a') } . 🏢`
 		}
 	} else {
-		action = googleApi.createWfhEventInInterval(employeeName, startDateTime, endDateTime);
+		action = googleApi.createWfhEvent(employeeName, startDateTime, endDateTime);
 		if (startDateTime.getDate() === endDateTime.getDate())
 		{
 			message = `✅ Okay! You're on the calendar as WFH on ${ moment(startDateTime).format('MMMM Do YYYY') } from ${ moment(startDateTime).format('h:mm a') } to ${ moment(endDateTime).format('h:mm a') }. _Don't slack off_! 🏡`
@@ -76,7 +76,7 @@ module.exports = {
 		return slackApi
 			.getUserInfo(userID)
 			.then(employeeName =>
-				googleApi.checkIfWfhEventExistsInInterval(employeeName, startDateTime, endDateTime)
+				googleApi.checkIfWfhEventExists(employeeName, startDateTime, endDateTime)
 					.then(eventId => toggleWfhEventInInterval(eventId, employeeName, startDateTime, endDateTime))
 					.then(message => slackApi.sendResponse(slackResponseEndpoint, message))
 			)
