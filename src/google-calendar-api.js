@@ -1,40 +1,26 @@
-var GoogleAuth = require('google-auth-library');
+var googleAuth = require('./google-auth-api');
 var google = require('googleapis');
 var calendar = google.calendar('v3').events;
 var moment = require('moment');
 
-var credentials = (function() {
-	var pending;
+function credentials() {
+	return googleAuth.credentials(process.env.GOOGLE_CLIENT_EMAIL, process.env.GOOGLE_PRIVATE_KEY);
+}
 
-	return function() {
-		if (!pending) {
-			pending = new Promise((resolve, reject) => {
-				const authFactory = new GoogleAuth();
-				const jwtClient = new authFactory.JWT(
-					process.env.GOOGLE_CLIENT_EMAIL,
-					null,
-					process.env.GOOGLE_PRIVATE_KEY,
-					['https://www.googleapis.com/auth/calendar']
-				);
-
-				jwtClient.authorize(error => error ? reject(error) : resolve(jwtClient));
-			});
-		}
-
-		return pending;
-	};
-})();
+function addDay(date) {
+	return date.clone().add(1, 'day').startOf('day');
+}
 
 module.exports = {
-	checkIfWfhEventExists: (employeeName, eventStartDateTime, eventEndDateTime = new Date(moment(eventStartDateTime).add(1, 'day').startOf('day').format())) => {
+	checkIfWfhEventExists: (employeeName, eventStartDateTime, eventEndDateTime = addDay(eventStartDateTime)) => {
 		return new Promise(resolve =>
 			credentials().then(auth =>
 				calendar.list({
 					auth,
 					calendarId: process.env.GOOGLE_CLIENT_EMAIL,
 					singleEvents: true,
-					timeMin: moment(eventStartDateTime).format(),
-					timeMax: moment(eventEndDateTime).format()
+					timeMin: eventStartDateTime.format(),
+					timeMax: eventEndDateTime.format()
 				}, (err, response) => {
 					var existingId;
 
@@ -67,7 +53,7 @@ module.exports = {
 			)
 		);
 	},
-	createWfhEvent: (employeeName, eventStartDateTime, eventEndDateTime = new Date(moment(eventStartDateTime).add(1, 'day').startOf('day').format())) => {
+	createWfhEvent: (employeeName, eventStartDateTime, eventEndDateTime = addDay(eventStartDateTime)) => {
 		return new Promise((resolve, reject) =>
 			credentials().then(auth =>
 				calendar.insert({
@@ -76,8 +62,8 @@ module.exports = {
 					resource: {
 						attendees: [{ email: process.env.GOOGLE_TARGET_CALENDAR }],
 						description: 'Added by your friendly, neighborhood Slackbot 🏡',
-						end: { dateTime: moment(eventEndDateTime).format() },
-						start: { dateTime: moment(eventStartDateTime) },
+						end: { dateTime: eventEndDateTime.format() },
+						start: { dateTime: eventStartDateTime.format() },
 						summary: `${ employeeName } - WFH`
 					}
 				}, (err, response) => {

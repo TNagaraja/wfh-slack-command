@@ -7,10 +7,10 @@ var toggleWfhEvent = (eventId, employeeName, date) => {
 
 	if (eventId) {
 		action = googleApi.deleteWfhEvent(eventId);
-		message = `🚗 Okay! Looks like you're going to the office on ${ moment(date).format('MMMM Do YYYY') }. 🏢`;
+		message = `🚗 Okay! Looks like you're going to the office on ${ date.format('MMMM Do YYYY') }. 🏢`;
 	} else {
 		action = googleApi.createWfhEvent(employeeName, date);
-		message = `✅ Okay! You're on the calendar as WFH for ${ moment(date).format('MMMM Do YYYY') }. _Don't slack off_! 🏡`;
+		message = `✅ Okay! You're on the calendar as WFH for ${ date.format('MMMM Do YYYY') }. _Don't slack off_! 🏡`;
 	}
 
 	return action.then(() => message);
@@ -21,23 +21,23 @@ var toggleWfhEventInInterval = (eventId, employeeName, startDateTime, endDateTim
 
 	if (eventId) {
 		action = googleApi.deleteWfhEvent(eventId);
-		if (startDateTime.getDate() === endDateTime.getDate())
+		if (startDateTime.format() === endDateTime.format())
 		{
-			message = `🚗 Okay! Looks like you're going to the office on ${ moment(startDateTime).format('MMMM Do YYYY') } from ${ moment(startDateTime).format('h:mm a') } to ${ moment(endDateTime).format('h:mm a') }. 🏢`
+			message = `🚗 Okay! Looks like you're going to the office on ${ startDateTime.format('MMMM Do YYYY') } from ${ startDateTime.format('h:mm a') } to ${ endDateTime.format('h:mm a') }. 🏢`
 		}
 		else
 		{
-			message = `🚗 Okay! Looks like you're going to the office from ${ moment(startDateTime).format('MMMM Do YYYY, h:mm a') } to ${ moment(endDateTime).format('MMMM Do YYYY, h:mm a') } . 🏢`
+			message = `🚗 Okay! Looks like you're going to the office from ${ startDateTime.format('MMMM Do YYYY, h:mm a') } to ${ endDateTime.format('MMMM Do YYYY, h:mm a') } . 🏢`
 		}
 	} else {
 		action = googleApi.createWfhEvent(employeeName, startDateTime, endDateTime);
-		if (startDateTime.getDate() === endDateTime.getDate())
+		if (startDateTime.format() === endDateTime.format())
 		{
-			message = `✅ Okay! You're on the calendar as WFH on ${ moment(startDateTime).format('MMMM Do YYYY') } from ${ moment(startDateTime).format('h:mm a') } to ${ moment(endDateTime).format('h:mm a') }. _Don't slack off_! 🏡`
+			message = `✅ Okay! You're on the calendar as WFH on ${ startDateTime.format('MMMM Do YYYY') } from ${ startDateTime.format('h:mm a') } to ${ endDateTime.format('h:mm a') }. _Don't slack off_! 🏡`
 		}
 		else
 		{
-			message = `✅ Okay! You're on the calendar as WFH from ${ moment(startDateTime).format('MMMM Do YYYY, h:mm a') } to ${ moment(endDateTime).format('MMMM Do YYYY, h:mm a') }. _Don't slack off_! 🏡`;
+			message = `✅ Okay! You're on the calendar as WFH from ${ startDateTime.format('MMMM Do YYYY, h:mm a') } to ${ endDateTime.format('MMMM Do YYYY, h:mm a') }. _Don't slack off_! 🏡`;
 		}
 	}
 
@@ -53,7 +53,7 @@ var clearCalendarEvent = (eventId, date) => {
 	else {
 		action = Promise.resolve();
 	}
-	message = `🚗 Okay! Looks like you're going to the office ${ moment(date).format('MMMM Do YYYY') }. 🏢`;
+	message = `🚗 Okay! Looks like you're going to the office ${ date.format('MMMM Do YYYY') }. 🏢`;
 
 	return action.then(() => message);
 }
@@ -85,12 +85,12 @@ module.exports = {
 				return slackApi.sendResponse(slackResponseEndpoint, '💥 Uh oh, just FYI, something went wrong and you\'re not on the calendar as WFH.');
 			})
 	},
-	clear: function (userID, slackResponseEndpoint, date) {
+	clear: function (userID, slackResponseEndpoint, startDateTime, endDateTime) {
 		return slackApi
 			.getUserInfo(userID)
 			.then(employeeName =>
-				googleApi.checkIfWfhEventExists(employeeName, date)
-					.then(eventId => clearCalendarEvent(eventId, date))
+				googleApi.checkIfWfhEventExists(employeeName, startDateTime, endDateTime)
+					.then(eventId => clearCalendarEvent(eventId, startDateTime))
 					.then(message => slackApi.sendResponse(slackResponseEndpoint, message))
 			);
 	}

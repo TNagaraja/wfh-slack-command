@@ -1,18 +1,12 @@
 var moment = require('moment');
 
-function handleAMPM(text)
+function getHours(text, searchStartIndex, searchEndIndex)
 {
-	var hours = parseInt(text.substring(0, text.search(':')), 10);
-	if ((/(AM|am)/).test(text))
+	var timeArray = (/(\w+:\w\w\s?(AM|am|PM|pm))/).exec(text.substring(searchStartIndex, searchEndIndex));
+	var hours = parseInt(timeArray[0].substring(0, timeArray[0].search(':')), 10);
+	if ((/(PM|pm)/).test(timeArray[0]))
 	{
-		if (hours === 12)
-		{
-			hours = 0;
-		}
-	}
-	else if ((/(PM|pm)/).test(text))
-	{
-		if (hours < 12)
+		if (hours !== 12)
 		{
 			hours += 12;
 		}
@@ -20,60 +14,47 @@ function handleAMPM(text)
 	return hours;
 }
 
-function extractHoursMinutesFromString(text, searchStartIndex, searchEndIndex)
+function getMinutes(text, searchStartIndex, searchEndIndex)
 {
 	var timeArray = (/(\w+:\w\w\s?(AM|am|PM|pm))/).exec(text.substring(searchStartIndex, searchEndIndex));
-	var timeString = `${ handleAMPM(timeArray[0]) }${ timeArray[0].substr(timeArray[0].search(':'), 3) }`;
-
-	if (timeString.length === 4)
-	{
-		timeString = `0${ timeString }`;
-	}
-	return timeString;
+	return parseInt(timeArray[0].substr(timeArray[0].search(':') + 1, 2), 10);
 }
 
 function checkIfTomorrow(text)
 {
-	if (text.includes('tomorrow') || text.includes('Tomorrow'))
+	if (text.toLowerCase().includes('tomorrow'))
 	{
 		return true;
 	}
 	return false;
 }
 
-
 function extractDateTime(text, start, end)
 {
-		var hoursStart = start;
-		var dateTime = new Date();
-		if (moment(text, 'MM-DD-YYYY').day())
-		{
-			dateTime = new Date(moment(text, 'MM-DD-YYYY').format());
-			if (hoursStart === 0)
-			{
-				hoursStart = text.search(' ');
-			}
-		}
-		else if (checkIfTomorrow(text))
-		{
-			dateTime.setDate(dateTime.getDate() + 1);
-		}
-		dateTime = new Date(`${ moment(dateTime).format().substr(0, 11) }${ extractHoursMinutesFromString(text, hoursStart, end) }:00${ moment(dateTime).format().substr(19, 6) }`);
-
-		return dateTime;
+	var dateTime = moment().startOf('day');
+	if (moment(text, 'MM-DD-YYYY').day())
+	{
+		dateTime = moment(text, 'MM-DD-YYYY');
+	}
+	else if (checkIfTomorrow(text))
+	{
+		dateTime.add(1, 'day');
+	}
+	dateTime.hours(getHours(text, start, end)).minutes(getMinutes(text, start, end));
+	return dateTime;
 }
 
 module.exports = {
 	getDate: function (text)
 	{
-		var date = new Date(moment().startOf('day'));
+		var date = moment().startOf('day');
 		if (checkIfTomorrow(text))
 		{
-			date.setDate(date.getDate() + 1);
+			date.add(1, 'day');
 		}
 		else if (moment(text, 'MM-DD-YYYY').day())
 		{
-			date = new Date(moment(text, 'MM-DD-YYYY').format());
+			date = moment(text, 'MM-DD-YYYY');
 		}
 		return date;
 	},
@@ -95,7 +76,7 @@ module.exports = {
 	},
 	checkIfClear: function (text)
 	{
-		if (text.includes('clear'))
+		if (text.toLowerCase().includes('clear'))
 		{
 			return true;
 		}

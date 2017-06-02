@@ -2,6 +2,7 @@ var Chance = require('chance');
 var chai = require('chai');
 var rewire = require('rewire');
 var sinon = require('sinon');
+var moment = require('moment');
 
 chai.use(require('chai-as-promised'));
 
@@ -23,7 +24,7 @@ describe('Handling a WFH request', () => {
 		};
 
 		handleWfhRequest.__set__({
-			credentials: sinon.stub().returns(Promise.resolve({})),
+			credentials: sinon.stub().resolves({}),
 			slackApi: fakeSlackApi,
 			googleApi: fakeGoogleApi
 		});
@@ -32,7 +33,7 @@ describe('Handling a WFH request', () => {
 	beforeEach(() => {
 		userId = chance.string();
 		slackResponseEndpoint = chance.url();
-		date = new Date(chance.date());
+		date = moment(chance.date());
 		refreshMocks();
 	});
 
@@ -130,8 +131,8 @@ describe('Handling a WFH request', () => {
 
 			beforeEach(() => {
 				employeeName = chance.name();
-				startDateTime = new Date(chance.date());
-				endDateTime = new Date(chance.date());
+				startDateTime = moment(chance.date());
+				endDateTime = moment(chance.date());
 				fakeSlackApi.getUserInfo.resolves(employeeName);
 			});
 
@@ -211,40 +212,41 @@ describe('Handling a WFH request', () => {
 		});
 	});
 	describe('When processing a request to clear,', () => {
-		var act = () => handleWfhRequest.clear(userId, slackResponseEndpoint, date);
-		describe('And the user already submitted a /wfh request for the requested date', () => {
-				var existingWfhEventId, employeeName;
-				beforeEach(() => {
-					employeeName = chance.name();
-					fakeSlackApi.getUserInfo.resolves(employeeName);
-					existingWfhEventId = chance.string();
-					fakeGoogleApi.checkIfWfhEventExists.resolves(existingWfhEventId);
-				});
-
-				describe('And the Google API calender deletion request is issued correctly', () => {
+			var act = () => handleWfhRequest.clear(userId, slackResponseEndpoint, date);
+			describe('And the user already submitted a /wfh request for the requested date', () => {
+					var existingWfhEventId, employeeName;
 					beforeEach(() => {
-						fakeGoogleApi.deleteWfhEvent.resolves();
-						return act();
+						employeeName = chance.name();
+						fakeSlackApi.getUserInfo.resolves(employeeName);
+						existingWfhEventId = chance.string();
+						fakeGoogleApi.checkIfWfhEventExists.resolves(existingWfhEventId);
 					});
 
-					it('should call the Google API to delete the existing WFH event', () =>
-						sinon.assert.calledWith(fakeGoogleApi.deleteWfhEvent, existingWfhEventId)
-					);
+					describe('And the Google API calender deletion request is issued correctly', () => {
+						beforeEach(() => {
+							fakeGoogleApi.deleteWfhEvent.resolves();
+							return act();
+						});
 
-					it('should send a response back to Slack telling the user a message about how it was deleted', () =>
+						it('should call the Google API to delete the existing WFH event', () =>
+							sinon.assert.calledWith(fakeGoogleApi.deleteWfhEvent, existingWfhEventId)
+						);
+
+						it('should send a response back to Slack telling the user a message about how it was deleted', () =>
+							sinon.assert.calledWith(fakeSlackApi.sendResponse, slackResponseEndpoint, sinon.match.string)
+						);
+					});
+			});
+			describe('And the user has not already submitted a /wfh request for the requested date', () => {
+					beforeEach(() => {
+						fakeSlackApi.getUserInfo.resolves(chance.name());
+						fakeGoogleApi.checkIfWfhEventExists.resolves();
+						return act();
+					});
+					it('should send a response back to Slack telling the user a message that they are not on the wfh calendar', () =>
 						sinon.assert.calledWith(fakeSlackApi.sendResponse, slackResponseEndpoint, sinon.match.string)
 					);
-				});
-		});
-		describe('And the user has not already submitted a /wfh request for the requested date', () => {
-				beforeEach(() => {
-					fakeSlackApi.getUserInfo.resolves(chance.name());
-					fakeGoogleApi.checkIfWfhEventExists.resolves();
-					return act();
-				});
-				it('should send a response back to Slack telling the user a message that they are not on the wfh calendar', () =>
-					sinon.assert.calledWith(fakeSlackApi.sendResponse, slackResponseEndpoint, sinon.match.string)
-				);
-		});
+			});
+
 	});
 });

@@ -1,5 +1,4 @@
 var Chance = require('chance');
-var Promise = require('bluebird');
 var chai = require('chai');
 var moment = require('moment');
 var rewire = require('rewire');
@@ -13,7 +12,7 @@ var googleApiWrapper = rewire('../src/google-calendar-api');
 var fakeCalendarApi = {};
 
 googleApiWrapper.__set__({
-	credentials: sinon.stub().returns(Promise.resolve({})),
+	credentials: sinon.stub().resolves({}),
 	calendar: fakeCalendarApi
 });
 
@@ -25,7 +24,7 @@ describe('Google Calendar API', () => {
 		targetCalendar = chance.email();
 		process.env.GOOGLE_CLIENT_EMAIL = clientEmail;
 		process.env.GOOGLE_TARGET_CALENDAR = targetCalendar;
-		date = new Date(chance.date({ year: 2017 }));
+		date = moment(chance.date({ year: 2017 }));
 	});
 
 	describe('Checking if an existing WFH event exists', () => {
@@ -53,11 +52,11 @@ describe('Google Calendar API', () => {
 				);
 
 				it('should set the "timeMin" to event date', () =>
-					expect(moment(fakeCalendarApi.list.firstCall.args[0].timeMin).isSame(moment(date), 'day')).to.equal(true)
+					expect(moment(fakeCalendarApi.list.firstCall.args[0].timeMin).isSame(date, 'day')).to.equal(true)
 				);
 
 				it('should set the "timeMax" parameter to day after event date', () =>
-					expect(moment(fakeCalendarApi.list.firstCall.args[0].timeMax).isSame(moment(date).add(1, 'day'), 'day')).to.equal(true)
+					expect(moment(fakeCalendarApi.list.firstCall.args[0].timeMax).isSame(date.add(1, 'day'), 'day')).to.equal(true)
 				);
 
 				it('should find that event ID', () =>
@@ -91,8 +90,8 @@ describe('Google Calendar API', () => {
 			beforeEach(() => {
 				eventId = chance.string();
 				apiResponse.items = [{ id: eventId, summary: `${ employeeName } - WFH` }];
-				startDateTime = new Date(chance.date({ year: 2017 }));
-				endDateTime = new Date(chance.date({ year: 2017 }));
+				startDateTime = moment(chance.date({ year: 2017 }));
+				endDateTime = moment(chance.date({ year: 2017 }));
 				return act();
 			});
 
@@ -101,11 +100,11 @@ describe('Google Calendar API', () => {
 			);
 
 			it('should set the "timeMin" to the start time', () =>
-				sinon.assert.match(moment(fakeCalendarApi.list.firstCall.args[0].timeMin).format(), moment(startDateTime).format())
+				sinon.assert.match(moment(fakeCalendarApi.list.firstCall.args[0].timeMin).isSame(startDateTime, 'minute'), true)
 			);
 
 			it('should set the "timeMax" parameter to the end time', () =>
-				sinon.assert.match(moment(fakeCalendarApi.list.firstCall.args[0].timeMax).format(), moment(endDateTime).format())
+				sinon.assert.match(moment(fakeCalendarApi.list.firstCall.args[0].timeMax).isSame(endDateTime, 'minute'), true)
 			);
 
 			it('should find that event ID', () =>
@@ -116,8 +115,8 @@ describe('Google Calendar API', () => {
 			describe('And there is not already a WFH event', () => {
 				beforeEach(() => {
 					apiResponse.items = [{ id: chance.string(), summary: `${ chance.name({ middle: true }) } - WFH` }];
-					startDateTime = new Date(chance.date({ year: 2017 }));
-					endDateTime = new Date(chance.date({ year: 2017 }));
+					startDateTime = moment(chance.date({ year: 2017 }));
+					endDateTime = moment(chance.date({ year: 2017 }));
 					return act();
 				});
 
@@ -193,11 +192,11 @@ describe('Google Calendar API', () => {
 				)
 
 				it('should set the start time to start of event date day', () =>
-					expect(moment(fakeCalendarApi.insert.firstCall.args[0].resource.start.dateTime).isSame(moment(date), 'day')).to.equal(true)
+					expect(moment(fakeCalendarApi.insert.firstCall.args[0].resource.start.dateTime).isSame(date, 'day')).to.equal(true)
 				);
 
 				it('should set the end time to start of day after event date', () =>
-					expect(moment(fakeCalendarApi.insert.firstCall.args[0].resource.end.dateTime).isSame(moment(date).add(1, 'day'), 'day')).to.equal(true)
+					expect(moment(fakeCalendarApi.insert.firstCall.args[0].resource.end.dateTime).isSame(date.add(1, 'day'), 'day')).to.equal(true)
 				);
 
 				it('should set the summary to the employee\'s name plus "WFH"', () =>
@@ -223,8 +222,8 @@ describe('Google Calendar API', () => {
 			describe('And the event creation succeeds', () => {
 				beforeEach(() => {
 					fakeCalendarApi.insert = sinon.stub().callsArg(1, null, {});
-					startDateTime = new Date(chance.date({ year: 2017 }));
-					endDateTime = new Date(chance.date({ year: 2017 }));
+					startDateTime = moment(chance.date({ year: 2017 }));
+					endDateTime = moment(chance.date({ year: 2017 }));
 					return act();
 				});
 
@@ -243,11 +242,11 @@ describe('Google Calendar API', () => {
 				)
 
 				it('should set the start time to the specified start time', () =>
-						sinon.assert.match(moment(fakeCalendarApi.insert.firstCall.args[0].resource.start.dateTime).format(), moment(startDateTime).format())
+						sinon.assert.match(moment(fakeCalendarApi.insert.firstCall.args[0].resource.start.dateTime).isSame(startDateTime, 'minute'), true)
 				);
 
 				it('should set the end time to the specified end time', () =>
-						sinon.assert.match(moment(fakeCalendarApi.insert.firstCall.args[0].resource.end.dateTime).format(), moment(endDateTime).format())
+						sinon.assert.match(moment(fakeCalendarApi.insert.firstCall.args[0].resource.end.dateTime).isSame(endDateTime, 'minute'), true)
 				);
 
 				it('should set the summary to the employee\'s name plus "WFH"', () =>
