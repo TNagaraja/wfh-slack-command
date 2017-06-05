@@ -4,10 +4,9 @@ var queryString = require('query-string');
 module.exports = {
 	getUserInfo: function(userId) {
 		var params = queryString.stringify({
-			token: process.env.SLACK_API_TOKEN,
+			token: process.env.SLACK_API_KEY,
 			user: userId
 		});
-
 		return fetch(`https://slack.com/api/users.info?${ params }`)
 			.then(response => {
 				if (response.status === 200) {

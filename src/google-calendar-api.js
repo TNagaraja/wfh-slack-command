@@ -1,30 +1,26 @@
-var GoogleAuth = require('google-auth-library');
+var googleAuth = require('./google-auth-api');
 var google = require('googleapis');
 var calendar = google.calendar('v3').events;
 var moment = require('moment');
 
-var credentials = new Promise((resolve, reject) => {
-	const authFactory = new GoogleAuth();
-	const jwtClient = new authFactory.JWT(
-		process.env.GOOGLE_CLIENT_EMAIL,
-		null,
-		process.env.GOOGLE_PRIVATE_KEY,
-		['https://www.googleapis.com/auth/calendar']
-	);
+function credentials() {
+	return googleAuth.credentials(process.env.GOOGLE_CLIENT_EMAIL, process.env.GOOGLE_PRIVATE_KEY);
+}
 
-	jwtClient.authorize(error => error ? reject(error) : resolve(jwtClient));
-});
+function addDay(date) {
+	return date.clone().add(1, 'day').startOf('day');
+}
 
 module.exports = {
-	checkIfWfhEventExists: employeeName => {
+	checkIfWfhEventExists: (employeeName, eventStartDateTime, eventEndDateTime = addDay(eventStartDateTime)) => {
 		return new Promise(resolve =>
-			credentials.then(auth =>
+			credentials().then(auth =>
 				calendar.list({
 					auth,
 					calendarId: process.env.GOOGLE_CLIENT_EMAIL,
 					singleEvents: true,
-					timeMin: moment().startOf('day').format(),
-					timeMax: moment().add(1, 'day').startOf('day').format()
+					timeMin: eventStartDateTime.format(),
+					timeMax: eventEndDateTime.format()
 				}, (err, response) => {
 					var existingId;
 
@@ -41,7 +37,7 @@ module.exports = {
 	},
 	deleteWfhEvent: eventId => {
 		return new Promise((resolve, reject) =>
-			credentials.then(auth =>
+			credentials().then(auth =>
 				calendar.delete({
 					auth,
 					calendarId: process.env.GOOGLE_CLIENT_EMAIL,
@@ -57,17 +53,17 @@ module.exports = {
 			)
 		);
 	},
-	createWfhEvent: employeeName => {
+	createWfhEvent: (employeeName, eventStartDateTime, eventEndDateTime = addDay(eventStartDateTime)) => {
 		return new Promise((resolve, reject) =>
-			credentials.then(auth =>
+			credentials().then(auth =>
 				calendar.insert({
 					auth,
 					calendarId: 'primary',
 					resource: {
 						attendees: [{ email: process.env.GOOGLE_TARGET_CALENDAR }],
 						description: 'Added by your friendly, neighborhood Slackbot 🏡',
-						end: { date: moment().add(1, 'day').format('YYYY-MM-DD') },
-						start: { date: moment().format('YYYY-MM-DD') },
+						end: { dateTime: eventEndDateTime.format() },
+						start: { dateTime: eventStartDateTime.format() },
 						summary: `${ employeeName } - WFH`
 					}
 				}, (err, response) => {
