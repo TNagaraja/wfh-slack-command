@@ -1,4 +1,4 @@
-var moment = require('moment');
+var moment = require('moment-timezone');
 
 function getHours(text, searchStartIndex, searchEndIndex)
 {
@@ -29,12 +29,12 @@ function checkIfTomorrow(text)
 	return false;
 }
 
-function extractDateTime(text, start, end)
+function extractDateTime(timezone, text, start, end)
 {
-	var dateTime = moment().startOf('day');
+	var dateTime = moment.tz(timezone).startOf('day');
 	if (moment(text, 'MM-DD-YYYY').day())
 	{
-		dateTime = moment(text, 'MM-DD-YYYY');
+		dateTime = moment.tz(text, 'MM-DD-YYYY', timezone);
 	}
 	else if (checkIfTomorrow(text))
 	{
@@ -45,26 +45,25 @@ function extractDateTime(text, start, end)
 }
 
 module.exports = {
-	getDate: function (text)
-	{
-		var date = moment().startOf('day');
+	getDate: function (text, timezone) {
+		var date = moment.tz(timezone).startOf('Day');
 		if (checkIfTomorrow(text))
 		{
 			date.add(1, 'day');
 		}
 		else if (moment(text, 'MM-DD-YYYY').day())
 		{
-			date = moment(text, 'MM-DD-YYYY');
+			date = moment.tz(text, 'MM-DD-YYYY', timezone);
 		}
 		return date;
 	},
-	getStartDateTime: function (text)
+	getStartDateTime: function (text, timezone)
 	{
-		return extractDateTime(text, 0, text.search(' to '))
+		return extractDateTime(timezone, text, 0, text.search(' to '));
 	},
-	getEndDateTime: function (text)
+	getEndDateTime: function (text, timezone)
 	{
-		return extractDateTime(text, text.search(' to ') + 4, text.length);
+		return extractDateTime(timezone, text, text.search(' to ') + 4, text.length);
 	},
 	checkIfDateTimeInterval: function (text)
 	{

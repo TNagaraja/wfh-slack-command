@@ -1,7 +1,6 @@
 var googleAuth = require('./google-auth-api');
 var google = require('googleapis');
 var calendar = google.calendar('v3').events;
-var moment = require('moment');
 
 function credentials() {
 	return googleAuth.credentials(process.env.GOOGLE_CLIENT_EMAIL, process.env.GOOGLE_PRIVATE_KEY);
