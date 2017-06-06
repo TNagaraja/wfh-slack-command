@@ -18,6 +18,22 @@ module.exports = {
 			})
 			.then(slackApiResponse => slackApiResponse.user.real_name);
 	},
+	getUserTimezone: function(userId) {
+		var params = queryString.stringify({
+			token: process.env.SLACK_API_KEY,
+			user: userId
+		});
+		return fetch(`https://slack.com/api/users.info?${ params }`)
+			.then(response => {
+				if (response.status === 200) {
+					return response.json();
+				}
+				else {
+					throw new Error('Cannot connect to the Slack API.');
+				}
+			})
+			.then(slackApiResponse => slackApiResponse.user.tz);
+	},
 	sendResponse: function(url, text) {
 		return fetch(url, {
 			method: 'POST',
