@@ -59,7 +59,7 @@ module.exports = {
 			.getUserInfo(userID)
 			.then(employeeName =>
 				googleApi.checkIfWfhEventExists(employeeName, startDateTime, endDateTime)
-					.then(eventId => clearCalendarEvent(eventId, startDateTime))
+					.then(eventId => clearCalendarEvent(eventId, startDateTime, endDateTime))
 					.then(message => slackApi.sendResponse(slackResponseEndpoint, message))
 			);
 	}
