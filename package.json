@@ -28,6 +28,7 @@
     "googleapis": "^19.0.0",
     "isomorphic-fetch": "^2.2.1",
     "moment": "^2.18.1",
+    "moment-timezone": "^0.5.13",
     "query-string": "^4.3.3"
   },
   "devDependencies": {
