@@ -12,16 +12,17 @@ function addDay(date) {
 
 module.exports = {
 	checkIfWfhEventExists: (employeeName, eventStartDateTime, eventEndDateTime = addDay(eventStartDateTime)) => {
-		return new Promise(resolve =>
-			credentials().then(auth =>
-				calendar.list({
-					auth,
-					calendarId: process.env.GOOGLE_CLIENT_EMAIL,
-					singleEvents: true,
-					timeMin: eventStartDateTime.format(),
-					timeMax: eventEndDateTime.format()
-				}, (err, response) => {
-					var existingId;
+			return new Promise(resolve =>
+				credentials().then(auth =>
+					calendar.list({
+						auth,
+						calendarId: process.env.GOOGLE_CLIENT_EMAIL,
+						singleEvents: true,
+						timeMin: eventStartDateTime.format(),
+						timeMax: eventEndDateTime.format(),
+						timeZone: eventStartDateTime.tz()
+					}, (err, response) => {
+						var existingId;
 
 					if (response) {
 						existingId = response.items
@@ -52,28 +53,53 @@ module.exports = {
 			)
 		);
 	},
-	createWfhEvent: (employeeName, eventStartDateTime, eventEndDateTime = addDay(eventStartDateTime)) => {
-		return new Promise((resolve, reject) =>
-			credentials().then(auth =>
-				calendar.insert({
-					auth,
-					calendarId: 'primary',
-					resource: {
-						attendees: [{ email: process.env.GOOGLE_TARGET_CALENDAR }],
-						description: 'Added by your friendly, neighborhood Slackbot 🏡',
-						end: { dateTime: eventEndDateTime.format() },
-						start: { dateTime: eventStartDateTime.format() },
-						summary: `${ employeeName } - WFH`
-					}
-				}, (err, response) => {
-					if (err) {
-						reject(err);
-					}
-					else {
-						resolve(response);
-					}
-				})
-			)
-		);
+	createWfhEvent: (employeeName, eventStartDateTime, eventEndDateTime) => {
+		if (eventEndDateTime) {
+			return new Promise((resolve, reject) =>
+				credentials().then(auth =>
+					calendar.insert({
+						auth,
+						calendarId: 'primary',
+						resource: {
+							attendees: [{ email: process.env.GOOGLE_TARGET_CALENDAR }],
+							description: 'Added by your friendly, neighborhood Slackbot 🏡',
+							end: { dateTime: eventEndDateTime.format() },
+							start: { dateTime: eventStartDateTime.format() },
+							summary: `${ employeeName } - WFH`
+						}
+					}, (err, response) => {
+						if (err) {
+							reject(err);
+						}
+						else {
+							resolve(response);
+						}
+					})
+				)
+			);
+		} else {
+			return new Promise((resolve, reject) =>
+				credentials().then(auth =>
+					calendar.insert({
+						auth,
+						calendarId: 'primary',
+						resource: {
+							attendees: [{ email: process.env.GOOGLE_TARGET_CALENDAR }],
+							description: 'Added by your friendly, neighborhood Slackbot 🏡',
+							end: { date: addDay(eventStartDateTime).format('YYYY-MM-DD') },
+							start: { date: eventStartDateTime.format('YYYY-MM-DD') },
+							summary: `${ employeeName } - WFH`
+						}
+					}, (err, response) => {
+						if (err) {
+							reject(err);
+						}
+						else {
+							resolve(response);
+						}
+					})
+				)
+			);
+		}
 	}
 };

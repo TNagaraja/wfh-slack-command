@@ -191,12 +191,12 @@ describe('Google Calendar API', () => {
 					expect(resolvedResult).to.eventually.be.fulfilled
 				)
 
-				it('should set the start time to start of event date day', () =>
-					expect(moment(fakeCalendarApi.insert.firstCall.args[0].resource.start.dateTime).isSame(date, 'day')).to.equal(true)
+				it('should set the start date to the date of the event date day', () =>
+					expect(moment(fakeCalendarApi.insert.firstCall.args[0].resource.start.date).isSame(date, 'day')).to.equal(true)
 				);
 
-				it('should set the end time to start of day after event date', () =>
-					expect(moment(fakeCalendarApi.insert.firstCall.args[0].resource.end.dateTime).isSame(date.add(1, 'day'), 'day')).to.equal(true)
+				it('should set the end time to the day after event date', () =>
+					expect(moment(fakeCalendarApi.insert.firstCall.args[0].resource.end.date).isSame(date.add(1, 'day'), 'day')).to.equal(true)
 				);
 
 				it('should set the summary to the employee\'s name plus "WFH"', () =>
